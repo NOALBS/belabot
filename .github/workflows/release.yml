@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          bin: liveu_stats_bot
+          bin: not-yet-named-bot
           tar: unix
           zip: windows
         env:
