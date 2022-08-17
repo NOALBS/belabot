@@ -92,21 +92,15 @@ async fn handle_belabox_messages(
 
     while let Ok(message) = bb_msg.recv().await {
         match message {
-            Message::InitialLoad(initial) => {
-                let config = initial.config;
-
+            Message::Config(config) => {
                 let mut lock = bela_state.write().await;
                 lock.config = Some(config);
             }
-            Message::Config { config } => {
-                let mut lock = bela_state.write().await;
-                lock.config = Some(config);
-            }
-            Message::RemoteEncoder { remote } => {
+            Message::RemoteEncoder(remote) => {
                 let mut lock = bela_state.write().await;
                 lock.online = remote.is_encoder_online
             }
-            Message::Netif { netif } => {
+            Message::Netif(netif) => {
                 if monitor.modems {
                     let read = bela_state.read().await;
                     if let Some(previous) = &read.netif {
@@ -145,25 +139,25 @@ async fn handle_belabox_messages(
                 let mut lock = bela_state.write().await;
                 lock.netif = Some(netif);
             }
-            Message::Sensors { sensors } => {
+            Message::Sensors(sensors) => {
                 let mut lock = bela_state.write().await;
                 lock.sensors = Some(sensors);
             }
-            Message::Bitrate { bitrate } => {
+            Message::Bitrate(bitrate) => {
                 let mut lock = bela_state.write().await;
                 if let Some(config) = &mut lock.config {
                     config.max_br = bitrate.max_br;
                 }
             }
-            Message::StreamingStatus { status } => {
+            Message::StreamingStatus(status) => {
                 let mut lock = bela_state.write().await;
                 lock.is_streaming = status.is_streaming;
             }
-            Message::Status { status } => {
+            Message::Status(status) => {
                 let mut lock = bela_state.write().await;
                 lock.is_streaming = status.is_streaming;
             }
-            Message::Notification { notification } => {
+            Message::Notification(notification) => {
                 if monitor.notifications {
                     let mut lock = bela_state.write().await;
                     let timeout = &mut lock.notification_timeout;

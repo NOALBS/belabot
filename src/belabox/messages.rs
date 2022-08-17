@@ -5,20 +5,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum Message {
-    InitialLoad(Box<InitialLoad>),
-    Config { config: Config },
-    RemoteAuth { remote: RemoteAuth },
-    RemoteEncoder { remote: RemoteEncoder },
-    Netif { netif: HashMap<String, Netif> },
-    Pipelines { pipelines: HashMap<String, String> },
-    Revisions { revisions: Revisions },
-    Sensors { sensors: Sensors },
-    Status { status: Status },
-    Updating { status: Updating },
-    Wifi { status: WifiChange },
-    StreamingStatus { status: StreamingStatus },
-    Notification { notification: Notification },
-    Bitrate { bitrate: Bitrate },
+    Config(Config),
+    RemoteAuth(RemoteAuth),
+    RemoteEncoder(RemoteEncoder),
+    Netif(HashMap<String, Netif>),
+    Revisions(Revisions),
+    Sensors(Sensors),
+    Status(Status),
+    Updating(Updating),
+    Wifi(WifiChange),
+    StreamingStatus(StreamingStatus),
+    Notification(Notification),
+    Bitrate(Bitrate),
+    Pipelines(HashMap<String, String>),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -31,16 +30,6 @@ pub struct RemoteAuth {
 pub struct RemoteEncoder {
     pub is_encoder_online: bool,
     pub version: Option<i64>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InitialLoad {
-    pub config: Config,
-    pub pipelines: HashMap<String, String>,
-    pub status: Status,
-    pub netif: HashMap<String, Netif>,
-    pub sensors: Sensors,
-    pub revisions: Revisions,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -74,7 +63,7 @@ pub struct StreamingStatus {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Status {
     pub is_streaming: bool,
-    pub available_updates: AvailableUpdates,
+    pub available_updates: Option<AvailableUpdates>,
     pub updating: Option<serde_json::Value>,
     pub ssh: Ssh,
     pub wifi: HashMap<String, Wifi>,

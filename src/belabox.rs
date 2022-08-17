@@ -229,7 +229,7 @@ async fn handle_messages(
         }
 
         if let TMessage::Text(text) = &message {
-            let m: Message = match serde_json::from_str(text) {
+            let text: serde_json::Value = match serde_json::from_str(text) {
                 Ok(o) => o,
                 Err(e) => {
                     error!(?e, text, "failed to deserialize");
@@ -237,15 +237,33 @@ async fn handle_messages(
                 }
             };
 
-            if let Message::RemoteAuth { remote } = &m {
-                if !remote.auth_key {
-                    error!("Failed to authenticate");
-                    return Err(BelaboxError::AuthFailed);
+            let text = match text.as_object() {
+                Some(o) => o,
+                None => {
+                    error!(?text, "not an object");
+                    continue;
                 }
-            }
+            };
 
-            trace!(?m, "Received message");
-            let _ = message_tx.send(m);
+            for (key, value) in text {
+                let m: Message = match serde_json::from_value(value.to_owned()) {
+                    Ok(o) => o,
+                    Err(e) => {
+                        error!(?e, ?key, ?value, "failed to deserialize");
+                        continue;
+                    }
+                };
+
+                if let Message::RemoteAuth(remote) = &m {
+                    if !remote.auth_key {
+                        error!("Failed to authenticate");
+                        return Err(BelaboxError::AuthFailed);
+                    }
+                }
+
+                trace!(?m, "Received message");
+                let _ = message_tx.send(m);
+            }
         }
     }
 
