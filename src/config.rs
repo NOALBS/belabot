@@ -23,9 +23,27 @@ pub struct Settings {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(default)]
 pub struct Belabox {
     pub remote_key: String,
     pub custom_interface_name: HashMap<String, String>,
+    pub monitor: Monitor,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(default)]
+pub struct Monitor {
+    pub modems: bool,
+    pub notifications: bool,
+}
+
+impl Default for Monitor {
+    fn default() -> Self {
+        Self {
+            modems: true,
+            notifications: true,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -103,6 +121,7 @@ impl Settings {
         let belabox = Belabox {
             remote_key: remote_key.to_string(),
             custom_interface_name,
+            monitor: Monitor::default(),
         };
 
         println!("\nPlease enter your Twitch details below");

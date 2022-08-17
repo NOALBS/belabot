@@ -3,8 +3,9 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::{
     sync::{broadcast::Receiver, RwLock},
     task::JoinHandle,
+    time::{self, Duration, Instant},
 };
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use crate::{
     belabox,
@@ -35,6 +36,7 @@ pub struct BelaState {
     config: Option<belabox::messages::Config>,
     netif: Option<HashMap<String, belabox::messages::Netif>>,
     sensors: Option<belabox::messages::Sensors>,
+    notification_timeout: HashMap<String, time::Instant>,
 }
 
 impl Bot {
@@ -50,6 +52,7 @@ impl Bot {
             belabox.message_stream()?,
             belabox.clone(),
             twitch.clone(),
+            config.belabox.monitor,
             bela_state.clone(),
         ));
 
@@ -82,6 +85,7 @@ async fn handle_belabox_messages(
     mut bb_msg: Receiver<belabox::Message>,
     belabox: Arc<Belabox>,
     twitch: Arc<Twitch>,
+    monitor: config::Monitor,
     bela_state: Arc<RwLock<BelaState>>,
 ) {
     use belabox::Message;
@@ -103,6 +107,41 @@ async fn handle_belabox_messages(
                 lock.online = remote.is_encoder_online
             }
             Message::Netif { netif } => {
+                if monitor.modems {
+                    let read = bela_state.read().await;
+                    if let Some(previous) = &read.netif {
+                        let added = netif
+                            .keys()
+                            .filter(|&n| !previous.contains_key(n))
+                            .map(|n| n.to_owned())
+                            .collect::<Vec<String>>();
+
+                        let removed = previous
+                            .keys()
+                            .filter(|&n| !netif.contains_key(n))
+                            .map(|n| n.to_owned())
+                            .collect::<Vec<String>>();
+
+                        let mut message = Vec::new();
+
+                        if !added.is_empty() {
+                            let a = if added.len() > 1 { "are" } else { "is" };
+
+                            message.push(format!("{} {} now connected", added.join(", "), a));
+                        }
+
+                        if !removed.is_empty() {
+                            let a = if removed.len() > 1 { "have" } else { "has" };
+
+                            message.push(format!("{} {} disconnected", removed.join(", "), a));
+                        }
+
+                        if !message.is_empty() {
+                            twitch.send(format!("BB: {}", message.join(", "))).await;
+                        }
+                    }
+                }
+
                 let mut lock = bela_state.write().await;
                 lock.netif = Some(netif);
             }
@@ -123,6 +162,30 @@ async fn handle_belabox_messages(
             Message::Status { status } => {
                 let mut lock = bela_state.write().await;
                 lock.is_streaming = status.is_streaming;
+            }
+            Message::Notification { notification } => {
+                if monitor.notifications {
+                    let mut lock = bela_state.write().await;
+                    let timeout = &mut lock.notification_timeout;
+
+                    let now = Instant::now();
+                    for notification in notification.show {
+                        if let Some(time) = timeout.get(&notification.name) {
+                            if time.elapsed() < Duration::from_secs(30) {
+                                continue;
+                            }
+                        }
+
+                        warn!(notification.msg, "notication");
+
+                        timeout
+                            .entry(notification.name)
+                            .and_modify(|n| *n = now)
+                            .or_insert(now);
+
+                        twitch.send("BB: ".to_owned() + &notification.msg).await;
+                    }
+                }
             }
             _ => {}
         }

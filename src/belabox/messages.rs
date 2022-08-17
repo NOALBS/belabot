@@ -149,7 +149,18 @@ pub struct Revisions {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Notification {
-    show: serde_json::Value,
+    pub show: Vec<NotificationMessage>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NotificationMessage {
+    pub duration: u32,
+    pub is_dismissable: bool,
+    pub is_persistent: bool,
+    pub msg: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub kind: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
