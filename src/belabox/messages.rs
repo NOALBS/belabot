@@ -44,7 +44,7 @@ pub struct Config {
     pub srtla_addr: String,
     pub srtla_port: String,
     pub bitrate_overlay: bool,
-    pub ssh_pass: String,
+    pub ssh_pass: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
