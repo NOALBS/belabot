@@ -1,3 +1,5 @@
+use std::env;
+
 use anyhow::Result;
 
 use not_yet_named_bot::{Bot, Settings};
@@ -5,11 +7,18 @@ use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let env_filter = EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
-        .from_env_lossy();
+    if env::var("RUST_LOG").is_err() {
+        env::set_var("RUST_LOG", "not_yet_named_bot=info");
+    }
 
-    tracing_subscriber::fmt().with_env_filter(env_filter).init();
+    if cfg!(windows) {
+        tracing_subscriber::fmt()
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .with_ansi(false)
+            .init();
+    } else {
+        tracing_subscriber::fmt::init();
+    }
 
     let config = match Settings::load("config.json") {
         Ok(c) => c,
