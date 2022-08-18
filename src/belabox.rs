@@ -156,7 +156,8 @@ async fn run_loop(
         }
 
         // Spawn thread to handle keepalive
-        let keepalive_handle = tokio::spawn(keepalive(request_write.clone()));
+        let (cancel_tx, cancel_rx) = tokio::sync::oneshot::channel();
+        tokio::spawn(keepalive(request_write.clone(), cancel_rx));
 
         // Handle messages
         if let Err(BelaboxError::AuthFailed) = handle_messages(read, message_tx.clone()).await {
@@ -164,7 +165,7 @@ async fn run_loop(
         };
 
         // Disconnected
-        keepalive_handle.abort();
+        let _ = cancel_tx.send(());
 
         {
             *request_write.lock().await = None;
@@ -194,9 +195,15 @@ async fn get_connection() -> WebSocketStream<MaybeTlsStream<TcpStream>> {
     }
 }
 
-async fn keepalive(write: Arc<Mutex<Option<Writer>>>) {
+async fn keepalive(write: Arc<Mutex<Option<Writer>>>, mut cancel_rx: oneshot::Receiver<()>) {
     loop {
         time::sleep(Duration::from_secs(5)).await;
+
+        if cancel_rx.try_recv().is_ok() {
+            debug!("keepalive cancel received");
+            break;
+        }
+
         debug!("Sending keepalive");
 
         if let Some(w) = write.lock().await.as_mut() {
