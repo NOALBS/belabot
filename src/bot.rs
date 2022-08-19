@@ -33,6 +33,7 @@ pub struct State {
 pub struct BelaState {
     online: bool,
     is_streaming: bool,
+    restart: bool,
     config: Option<belabox::messages::Config>,
     netif: Option<HashMap<String, belabox::messages::Netif>>,
     sensors: Option<belabox::messages::Sensors>,
@@ -156,6 +157,18 @@ async fn handle_belabox_messages(
             Message::Status(status) => {
                 let mut lock = bela_state.write().await;
                 lock.is_streaming = status.is_streaming;
+
+                if lock.restart {
+                    lock.restart = false;
+
+                    if let Some(config) = &lock.config {
+                        let request = belabox::requests::Start::from(config.to_owned());
+                        belabox.start(request).await;
+
+                        let msg = "BB: Reboot successful, starting the stream".to_string();
+                        twitch.send(msg).await;
+                    }
+                }
             }
             Message::Notification(notification) => {
                 if monitor.notifications {
@@ -316,6 +329,24 @@ async fn handle_twitch_messages(
                 format!("{}, Total: {} kbps", interfaces, total_bitrate)
             }
             BotCommand::Restart => {
+                let is_streaming = {
+                    let mut lock = bela_state.write().await;
+
+                    if lock.restart {
+                        continue;
+                    }
+
+                    if lock.is_streaming {
+                        lock.restart = true;
+                    }
+
+                    lock.is_streaming
+                };
+
+                if is_streaming {
+                    belabox.stop().await;
+                }
+
                 belabox.restart().await;
                 "Rebooting BELABOX".to_string()
             }
