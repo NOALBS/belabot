@@ -34,6 +34,7 @@ pub struct BelaState {
     online: bool,
     is_streaming: bool,
     restart: bool,
+    notify_ups: Option<bool>,
     config: Option<belabox::messages::Config>,
     netif: Option<HashMap<String, belabox::messages::Netif>>,
     sensors: Option<belabox::messages::Sensors>,
@@ -141,6 +142,41 @@ async fn handle_belabox_messages(
                 lock.netif = Some(netif);
             }
             Message::Sensors(sensors) => {
+                if monitor.ups {
+                    if let Some(voltage) = &sensors.soc_voltage {
+                        let voltage = voltage.split_whitespace().next().unwrap();
+                        let voltage = voltage.parse::<f64>().unwrap();
+                        let plugged_in = (voltage * 10.0).floor() / 10.0 >= 5.1;
+
+                        let charging = {
+                            let mut lock = bela_state.write().await;
+                            let notify = &mut lock.notify_ups;
+
+                            let current_notify = match notify {
+                                Some(n) => *n,
+                                None => plugged_in,
+                            };
+
+                            let charging = match (plugged_in, current_notify) {
+                                (true, false) => Some(true),
+                                (false, true) => Some(false),
+                                _ => None,
+                            };
+
+                            *notify = Some(plugged_in);
+
+                            charging
+                        };
+
+                        if let Some(c) = charging {
+                            let a = if !c { "not" } else { "" };
+                            let msg = format!("BB: UPS {} charging", a);
+
+                            twitch.send(msg).await;
+                        }
+                    }
+                }
+
                 let mut lock = bela_state.write().await;
                 lock.sensors = Some(sensors);
             }
@@ -293,9 +329,9 @@ async fn handle_twitch_messages(
                 "Stopping BELABOX".to_string()
             }
             BotCommand::Stats => {
-                let netifs = {
+                let (netifs, ups) = {
                     let read = bela_state.read().await;
-                    read.netif.to_owned()
+                    (read.netif.to_owned(), read.notify_ups)
                 };
 
                 let mut total_bitrate = 0;
@@ -326,7 +362,14 @@ async fn handle_twitch_messages(
                     .collect::<Vec<String>>()
                     .join(", ");
 
-                format!("{}, Total: {} kbps", interfaces, total_bitrate)
+                let mut msg = format!("{}, Total: {} kbps", interfaces, total_bitrate);
+
+                if let Some(connected) = ups {
+                    let a = if !connected { "not" } else { "" };
+                    msg += &format!(", UPS: {} charging", a);
+                }
+
+                msg
             }
             BotCommand::Restart => {
                 let is_streaming = {

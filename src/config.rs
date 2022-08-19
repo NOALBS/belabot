@@ -35,6 +35,7 @@ pub struct Belabox {
 pub struct Monitor {
     pub modems: bool,
     pub notifications: bool,
+    pub ups: bool,
 }
 
 impl Default for Monitor {
@@ -42,6 +43,7 @@ impl Default for Monitor {
         Self {
             modems: true,
             notifications: true,
+            ups: false,
         }
     }
 }
