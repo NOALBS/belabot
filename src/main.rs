@@ -2,18 +2,18 @@ use std::env;
 
 use anyhow::Result;
 
-use not_yet_named_bot::{Bot, Settings};
-use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+use belabot::{Bot, Settings};
+use tracing_subscriber::filter::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     if env::var("RUST_LOG").is_err() {
-        env::set_var("RUST_LOG", "not_yet_named_bot=info");
+        env::set_var("RUST_LOG", "belabot=info");
     }
 
     if cfg!(windows) {
         tracing_subscriber::fmt()
-            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .with_env_filter(EnvFilter::from_default_env())
             .with_ansi(false)
             .init();
     } else {

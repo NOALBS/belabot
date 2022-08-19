@@ -1,10 +1,10 @@
-# not-yet-named-bot
+# belabot
 
 A chat bot alternative to control [belaUI](https://github.com/BELABOX/belaUI) in combination with [BELABOX Cloud](https://cloud.belabox.net)
 
 ## How do i run this?
 
-Just download the latest binary from [releases](https://github.com/715209/not-yet-named-bot/releases) and execute it.
+Just download the latest binary from [releases](https://github.com/715209/belabot/releases) and execute it.
 
 ## Config
 

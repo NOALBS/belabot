@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          bin: not-yet-named-bot
+          bin: belabot
           tar: unix
           zip: windows
         env:
