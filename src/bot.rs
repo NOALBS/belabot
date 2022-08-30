@@ -146,7 +146,7 @@ async fn handle_belabox_messages(
                     if let Some(voltage) = &sensors.soc_voltage {
                         let voltage = voltage.split_whitespace().next().unwrap();
                         let voltage = voltage.parse::<f64>().unwrap();
-                        let plugged_in = (voltage * 10.0).floor() / 10.0 >= 5.1;
+                        let plugged_in = (voltage * 10.0).floor() / 10.0 >= monitor.ups_plugged_in;
 
                         let charging = {
                             let mut lock = bela_state.write().await;

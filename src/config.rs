@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use read_input::{prelude::input, InputBuild};
+use read_input::prelude::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::error;
@@ -36,6 +36,7 @@ pub struct Monitor {
     pub modems: bool,
     pub notifications: bool,
     pub ups: bool,
+    pub ups_plugged_in: f64,
 }
 
 impl Default for Monitor {
@@ -44,6 +45,7 @@ impl Default for Monitor {
             modems: true,
             notifications: true,
             ups: false,
+            ups_plugged_in: 5.1,
         }
     }
 }
@@ -112,22 +114,70 @@ impl Settings {
     pub async fn ask_for_settings() -> Result<Self, ConfigError> {
         println!("Please paste your BELABOX Cloud remote URL below");
 
-        let remote_key: String = input().msg("URL: ").get();
-        let remote_key = remote_key.split("?key=").nth(1).expect("No key found");
+        let remote_key: String = input()
+            .msg("URL: ")
+            .add_err_test(
+                |u: &String| u.contains("?key="),
+                "No key found, please try again",
+            )
+            .get()
+            .split("?key=")
+            .nth(1)
+            .expect("No key found")
+            .to_string();
 
         let mut custom_interface_name = HashMap::new();
         custom_interface_name.insert("eth0".to_string(), "eth0".to_string());
         custom_interface_name.insert("usb0".to_string(), "usb0".to_string());
         custom_interface_name.insert("wlan0".to_string(), "wlan0".to_string());
 
+        println!("\nDo you want to receive automatic chat messages about:");
+
+        let is_y_or_n = |x: &String| x.to_lowercase() == "y" || x.to_lowercase() == "n";
+        let mut monitor = Monitor {
+            modems: input_to_bool(
+                input()
+                    .msg("The status of your modems (Y/n): ")
+                    .add_test(is_y_or_n)
+                    .err("Please enter y or n: ")
+                    .default("y".to_string())
+                    .get(),
+            ),
+            notifications: input_to_bool(
+                input()
+                    .msg("The belaUI notifications (Y/n): ")
+                    .add_test(is_y_or_n)
+                    .err("Please enter y or n: ")
+                    .default("y".to_string())
+                    .get(),
+            ),
+            ups: input_to_bool(
+                input()
+                    .msg("The status of your UPS (y/N): ")
+                    .add_test(is_y_or_n)
+                    .err("Please enter y or n: ")
+                    .default("n".to_string())
+                    .get(),
+            ),
+            ups_plugged_in: 5.1,
+        };
+
+        if monitor.ups {
+            monitor.ups_plugged_in = input()
+                .msg("UPS charging threshold (default 5.1 V): ")
+                .err("Please enter a number")
+                .default(5.1)
+                .get();
+        }
+
         let belabox = Belabox {
-            remote_key: remote_key.to_string(),
+            remote_key,
             custom_interface_name,
-            monitor: Monitor::default(),
+            monitor,
         };
 
         println!("\nPlease enter your Twitch details below");
-        let twitch = Twitch {
+        let mut twitch = Twitch {
             bot_username: input().msg("Bot username: ").get(),
             bot_oauth: input()
                 .msg("(You can generate an Oauth here: https://twitchapps.com/tmi/)\nBot oauth: ")
@@ -135,6 +185,16 @@ impl Settings {
             channel: input().msg("Channel name: ").get(),
             admins: Vec::new(),
         };
+
+        let admins = input::<String>()
+            .msg("Admin users (separate multiple names by a comma): ")
+            .get();
+
+        if !admins.is_empty() {
+            for admin in admins.split(',') {
+                twitch.admins.push(admin.trim().to_lowercase());
+            }
+        }
 
         let mut commands = HashMap::new();
         default_chat_commands(&mut commands);
@@ -185,6 +245,11 @@ fn lowercase_settings(settings: &mut Settings) {
     for info in settings.commands.values_mut() {
         info.command = info.command.to_lowercase();
     }
+}
+
+/// Converts y or n to bool.
+fn input_to_bool(confirm: String) -> bool {
+    confirm.to_lowercase() == "y"
 }
 
 // Insert default commands if they don't exist
