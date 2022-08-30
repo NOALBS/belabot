@@ -40,6 +40,8 @@ pub enum BelaboxError {
     AuthFailed,
     #[error("Receiver closed")]
     ReceiverClosed(#[from] tokio::sync::oneshot::error::RecvError),
+    #[error("Already restarting")]
+    AlreadyRestarting,
 }
 
 pub struct Belabox {
