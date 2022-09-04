@@ -20,7 +20,9 @@ Example of the config that will be automatically generated upon running the bina
         },
         "monitor": {
             "modems": true,
-            "notifications": true
+            "notifications": true,
+            "ups": true,
+            "ups_plugged_in": 5.1
         }
     },
     "twitch": {
@@ -77,7 +79,9 @@ Example of the config that will be automatically generated upon running the bina
     },
     "monitor": {
         "modems": true,
-        "notifications": true
+        "notifications": true,
+        "ups": true,
+        "ups_plugged_in": 5.1
     }
 }
 ```
