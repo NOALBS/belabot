@@ -48,6 +48,7 @@ impl CommandHandler {
             }
 
             let response = match command {
+                BotCommand::AudioDelay => self.audio_delay(split_message.next()).await,
                 BotCommand::Bitrate => self.bitrate(split_message.next()).await,
                 BotCommand::Network => self.network(split_message.next()).await,
                 BotCommand::Poweroff => self.poweroff().await,
@@ -371,18 +372,18 @@ impl CommandHandler {
     }
 
     pub async fn latency(&self, latency: Option<&str>) -> Result<String> {
-        let current_latency = {
-            self.bela_state
-                .read()
-                .await
-                .config
-                .as_ref()
-                .map(|config| config.srt_latency)
-        };
-
         let latency = match latency {
             Some(b) => b,
             None => {
+                let current_latency = {
+                    self.bela_state
+                        .read()
+                        .await
+                        .config
+                        .as_ref()
+                        .map(|config| config.srt_latency)
+                };
+
                 let latency = if let Some(current) = current_latency {
                     current.to_string()
                 } else {
@@ -427,6 +428,65 @@ impl CommandHandler {
         }
 
         Ok(format!("Changed SRT latency to {} ms", latency))
+    }
+
+    pub async fn audio_delay(&self, delay: Option<&str>) -> Result<String> {
+        let delay = match delay {
+            Some(b) => b,
+            None => {
+                let current_delay = {
+                    self.bela_state
+                        .read()
+                        .await
+                        .config
+                        .as_ref()
+                        .map(|config| config.delay)
+                };
+
+                let delay = if let Some(current) = current_delay {
+                    current.to_string()
+                } else {
+                    "unknown".to_string()
+                };
+
+                return Ok(format!("Current audio delay is {} ms", delay));
+            }
+        };
+
+        let delay = match delay.parse::<i32>() {
+            Ok(l) => l,
+            Err(_) => {
+                return Ok(format!("Invalid number {} given", delay));
+            }
+        };
+
+        if delay.abs() > 2000 {
+            let msg = format!("Invalid value: {}, use a value between -2000 - 2000", delay);
+            return Ok(msg);
+        }
+
+        let delay = increment_by_step(delay, 20.0);
+        let is_streaming = { self.bela_state.read().await.is_streaming };
+
+        if is_streaming {
+            let _ = self.stop().await?;
+            self.send("Restarting the stream".to_string()).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await
+        }
+
+        {
+            let mut lock = self.bela_state.write().await;
+
+            if let Some(config) = &mut lock.config {
+                config.delay = delay as i32;
+            }
+        }
+
+        if is_streaming {
+            let _ = self.start().await?;
+        }
+
+        Ok(format!("Changed audio delay to {} ms", delay))
     }
 }
 

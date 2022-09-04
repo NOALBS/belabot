@@ -66,7 +66,9 @@ pub struct CommandInformation {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
 pub enum BotCommand {
+    AudioDelay,
     Bitrate,
+    Latency,
     Network,
     Poweroff,
     Restart,
@@ -74,7 +76,6 @@ pub enum BotCommand {
     Start,
     Stats,
     Stop,
-    Latency,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -315,6 +316,13 @@ fn default_chat_commands(commands: &mut HashMap<BotCommand, CommandInformation>)
         .entry(BotCommand::Latency)
         .or_insert(CommandInformation {
             command: "!bbl".to_string(),
+            permission: Permission::Broadcaster,
+        });
+
+    commands
+        .entry(BotCommand::AudioDelay)
+        .or_insert(CommandInformation {
+            command: "!bbd".to_string(),
             permission: Permission::Broadcaster,
         });
 }
