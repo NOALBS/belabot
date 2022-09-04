@@ -125,17 +125,18 @@ Example of the config that will be automatically generated upon running the bina
 
 After running the executable successfully you can use the following commands in your chat:
 
-| Name     | Default command | Description                                           |
-| -------- | --------------- | ----------------------------------------------------- |
-| Bitrate  | !bbb (bitrate)  | Sets the max bitrate                                  |
-| Network  | !bbt (name)     | Toggles an interface to disable or enable             |
-| Poweroff | !bbpo           | Poweroff the jetson nano                              |
-| Restart  | !bbrestart      | Restarts the jetson nano                              |
-| Sensor   | !bbsensor       | Shows the current sensor information                  |
-| Stats    | !bbs            | Shows the current connected modems status and bitrate |
-| Start    | !bbstart        | Starts the stream                                     |
-| Stop     | !bbstop         | Stops the stream                                      |
-| Latency  | !bbl (latency)  | Changes the SRT latency                               |
+| Name       | Default command | Description                                           |
+| ---------- | --------------- | ----------------------------------------------------- |
+| Bitrate    | !bbb (bitrate)  | Sets the max bitrate                                  |
+| Network    | !bbt (name)     | Toggles an interface to disable or enable             |
+| Poweroff   | !bbpo           | Poweroff the jetson nano                              |
+| Restart    | !bbrestart      | Restarts the jetson nano                              |
+| Sensor     | !bbsensor       | Shows the current sensor information                  |
+| Stats      | !bbs            | Shows the current connected modems status and bitrate |
+| Start      | !bbstart        | Starts the stream                                     |
+| Stop       | !bbstop         | Stops the stream                                      |
+| Latency    | !bbl (latency)  | Changes the SRT latency in ms                         |
+| AudioDelay | !bbd (delay)    | Changes the audio delay in ms                         |
 
 ## Disclaimer
 
