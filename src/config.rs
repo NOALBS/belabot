@@ -74,6 +74,7 @@ pub enum BotCommand {
     Start,
     Stats,
     Stop,
+    Latency,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -307,6 +308,13 @@ fn default_chat_commands(commands: &mut HashMap<BotCommand, CommandInformation>)
         .entry(BotCommand::Network)
         .or_insert(CommandInformation {
             command: "!bbt".to_string(),
+            permission: Permission::Broadcaster,
+        });
+
+    commands
+        .entry(BotCommand::Latency)
+        .or_insert(CommandInformation {
+            command: "!bbl".to_string(),
             permission: Permission::Broadcaster,
         });
 }

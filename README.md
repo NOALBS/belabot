@@ -131,6 +131,7 @@ After running the executable successfully you can use the following commands in 
 | Stats    | !bbs            | Shows the current connected modems status and bitrate |
 | Start    | !bbstart        | Starts the stream                                     |
 | Stop     | !bbstop         | Stops the stream                                      |
+| Latency  | !bbl (latency)  | Changes the SRT latency                               |
 
 ## Disclaimer
 

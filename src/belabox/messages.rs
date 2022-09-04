@@ -39,7 +39,7 @@ pub struct Config {
     pub max_br: u32,
     pub delay: i32,
     pub pipeline: String,
-    pub srt_latency: i64,
+    pub srt_latency: u64,
     pub srt_streamid: String,
     pub srtla_addr: String,
     pub srtla_port: String,

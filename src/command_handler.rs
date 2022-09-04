@@ -56,6 +56,7 @@ impl CommandHandler {
                 BotCommand::Start => self.start().await,
                 BotCommand::Stats => self.stats().await,
                 BotCommand::Stop => self.stop().await,
+                BotCommand::Latency => self.latency(split_message.next()).await,
             };
 
             match response {
@@ -222,7 +223,7 @@ impl CommandHandler {
         let bitrate = match bitrate.parse::<u32>() {
             Ok(b) => b,
             Err(_) => {
-                return Ok("Invalid number given".to_string());
+                return Ok(format!("Invalid number {} given", bitrate));
             }
         };
 
@@ -234,16 +235,13 @@ impl CommandHandler {
             return Ok(msg);
         }
 
-        let increment = 250.0;
-        let bitrate = (bitrate as f64 / increment as f64).round() * increment;
-
-        let max_br = bitrate as u32;
-        self.belabox.bitrate(max_br).await?;
+        let bitrate = increment_by_step(bitrate as f64, 250.0) as u32;
+        self.belabox.bitrate(bitrate).await?;
 
         {
             let mut read = self.bela_state.write().await;
             if let Some(config) = &mut read.config {
-                config.max_br = max_br;
+                config.max_br = bitrate;
             }
         }
 
@@ -371,4 +369,74 @@ impl CommandHandler {
 
         Ok(response)
     }
+
+    pub async fn latency(&self, latency: Option<&str>) -> Result<String> {
+        let current_latency = {
+            self.bela_state
+                .read()
+                .await
+                .config
+                .as_ref()
+                .map(|config| config.srt_latency)
+        };
+
+        let latency = match latency {
+            Some(b) => b,
+            None => {
+                let latency = if let Some(current) = current_latency {
+                    current.to_string()
+                } else {
+                    "unknown".to_string()
+                };
+
+                return Ok(format!("Current SRT latency is {} ms", latency));
+            }
+        };
+
+        let latency = match latency.parse::<u64>() {
+            Ok(l) => l,
+            Err(_) => {
+                return Ok(format!("Invalid number {} given", latency));
+            }
+        };
+
+        if !(100..=4000).contains(&latency) {
+            let msg = format!("Invalid value: {}, use a value between 100 - 4000", latency);
+            return Ok(msg);
+        }
+
+        let latency = increment_by_step(latency as f64, 100.0);
+        let is_streaming = { self.bela_state.read().await.is_streaming };
+
+        if is_streaming {
+            let _ = self.stop().await?;
+            self.send("Restarting the stream".to_string()).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await
+        }
+
+        {
+            let mut lock = self.bela_state.write().await;
+
+            if let Some(config) = &mut lock.config {
+                config.srt_latency = latency as u64;
+            }
+        }
+
+        if is_streaming {
+            let _ = self.start().await?;
+        }
+
+        Ok(format!("Changed SRT latency to {} ms", latency))
+    }
+}
+
+fn increment_by_step<V, S>(value: V, step: S) -> f64
+where
+    V: Into<f64>,
+    S: Into<f64>,
+{
+    let value = value.into();
+    let step = step.into();
+
+    (value / step).round() * step
 }
