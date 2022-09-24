@@ -98,7 +98,7 @@ impl Monitor {
 
         let voltage = voltage.split_whitespace().next().unwrap();
         let voltage = voltage.parse::<f64>().unwrap();
-        let plugged_in = (voltage * 10.0).floor() / 10.0 >= plugged_voltage;
+        let plugged_in = (voltage * 100.0).floor() / 100.0 >= plugged_voltage;
 
         let charging = {
             let mut lock = self.bela_state.write().await;
