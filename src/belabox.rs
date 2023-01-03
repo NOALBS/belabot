@@ -101,7 +101,7 @@ impl Belabox {
     }
 
     pub async fn stop(&self) -> Result<(), BelaboxError> {
-        let request = Request::Stop(None);
+        let request = Request::Stop(0);
 
         self.send(request).await
     }

@@ -9,7 +9,7 @@ pub enum Request {
     Netif(Netif),
     Remote(Remote),
     Start(Start),
-    Stop(Option<()>),
+    Stop(u8),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
