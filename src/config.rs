@@ -37,6 +37,7 @@ pub struct Monitor {
     pub notifications: bool,
     pub ups: bool,
     pub ups_plugged_in: f64,
+    pub notification_timeout: u64,
 }
 
 impl Default for Monitor {
@@ -46,6 +47,7 @@ impl Default for Monitor {
             notifications: true,
             ups: false,
             ups_plugged_in: 5.1,
+            notification_timeout: 30,
         }
     }
 }
@@ -163,7 +165,7 @@ impl Settings {
                     .default("n".to_string())
                     .get(),
             ),
-            ups_plugged_in: 5.1,
+            ..Default::default()
         };
 
         if monitor.ups {

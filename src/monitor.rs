@@ -38,7 +38,8 @@ impl Monitor {
                 }
                 Message::Notification(notification) => {
                     if monitor.notifications {
-                        self.notifications(notification).await;
+                        self.notifications(notification, monitor.notification_timeout)
+                            .await;
                     }
                 }
                 _ => {}
@@ -128,14 +129,18 @@ impl Monitor {
         }
     }
 
-    pub async fn notifications(&self, notification: messages::Notification) {
+    pub async fn notifications(
+        &self,
+        notification: messages::Notification,
+        notification_timeout: u64,
+    ) {
         let mut lock = self.bela_state.write().await;
         let timeout = &mut lock.notification_timeout;
 
         let now = Instant::now();
         for notification in notification.show {
             if let Some(time) = timeout.get(&notification.name) {
-                if time.elapsed() < Duration::from_secs(30) {
+                if time.elapsed() < Duration::from_secs(notification_timeout) {
                     continue;
                 }
             }
