@@ -33,6 +33,7 @@ pub struct BelaState {
     pub sensors: Option<belabox::messages::Sensors>,
     pub notification_timeout: HashMap<String, time::Instant>,
     pub pipelines: Option<HashMap<String, belabox::messages::Pipeline>>,
+    pub asrcs: Option<Vec<String>>,
 }
 
 impl Bot {
@@ -119,6 +120,7 @@ async fn handle_belabox_messages(
             Message::Status(status) => {
                 let mut lock = bela_state.write().await;
                 lock.is_streaming = status.is_streaming;
+                lock.asrcs = Some(status.asrcs);
 
                 if lock.restart {
                     lock.restart = false;
@@ -135,6 +137,10 @@ async fn handle_belabox_messages(
             Message::Pipelines(pipelines) => {
                 let mut lock = bela_state.write().await;
                 lock.pipelines = Some(pipelines);
+            }
+            Message::Asrcs(status) => {
+                let mut lock = bela_state.write().await;
+                lock.asrcs = Some(status.asrcs);
             }
             _ => {}
         }

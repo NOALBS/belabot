@@ -49,6 +49,7 @@ impl CommandHandler {
 
             let response = match command {
                 BotCommand::AudioDelay => self.audio_delay(split_message.next()).await,
+                BotCommand::AudioSrc => self.audio_src(split_message).await,
                 BotCommand::Bitrate => self.bitrate(split_message.next()).await,
                 BotCommand::Latency => self.latency(split_message.next()).await,
                 BotCommand::Network => self.network(split_message.next()).await,
@@ -560,6 +561,61 @@ impl CommandHandler {
         }
 
         Ok(format!("Changed pipeline to {}", found_pipeline.0 .1))
+    }
+
+    pub(crate) async fn audio_src<'a, I>(&self, args: I) -> Result<String>
+    where
+        I: IntoIterator<Item = &'a str>,
+    {
+        let args = args.into_iter();
+        let query = args.collect::<Vec<&str>>().join(" ");
+
+        let (is_streaming, asrcs) = {
+            let state = self.bela_state.read().await;
+            let asrcs = state.asrcs.to_owned();
+
+            (state.is_streaming, asrcs)
+        };
+
+        if is_streaming {
+            let _ = self.stop().await?;
+            self.send("Restarting the stream".to_string()).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await
+        }
+
+        let asrcs = match asrcs {
+            Some(a) => a,
+            None => return Ok("No audio sources found".to_string()),
+        };
+
+        // find audio src
+        let found_asrcs = asrcs
+            .iter()
+            .map(|asrc| (asrc, strsim::sorensen_dice(&query, &asrc.to_lowercase())))
+            .min_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+        let found_asrcs = match found_asrcs {
+            Some(p) => p,
+            None => return Ok("Audio source not found".to_string()),
+        };
+
+        if found_asrcs.1 == 0.0 {
+            return Ok("Audio source not found".to_string());
+        }
+
+        // change audio src
+        {
+            let mut state = self.bela_state.write().await;
+            if let Some(mut config) = state.config.as_mut() {
+                config.asrc = found_asrcs.0.to_owned();
+            }
+        }
+
+        if is_streaming {
+            let _ = self.start().await?;
+        }
+
+        Ok(format!("Changed audio to {}", found_asrcs.0))
     }
 }
 
