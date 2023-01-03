@@ -18,7 +18,7 @@ pub enum Message {
     Notification(Notification),
     Bitrate(Bitrate),
     Pipelines(HashMap<String, Pipeline>),
-    Acodecs(Acodecs),
+    Acodecs(HashMap<String, String>),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -165,10 +165,4 @@ pub struct NotificationMessage {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Bitrate {
     pub max_br: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Acodecs {
-    pub aac: String,
-    pub opus: String,
 }
