@@ -552,7 +552,7 @@ impl CommandHandler {
         {
             let mut state = self.bela_state.write().await;
             if let Some(mut config) = state.config.as_mut() {
-                config.pipeline = dbg!(found_pipeline.0 .0.to_owned());
+                config.pipeline = found_pipeline.0 .0.to_owned();
             }
         }
 
