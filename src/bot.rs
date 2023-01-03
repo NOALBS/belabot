@@ -132,6 +132,10 @@ async fn handle_belabox_messages(
                     }
                 }
             }
+            Message::Pipelines(pipelines) => {
+                let mut lock = bela_state.write().await;
+                lock.pipelines = Some(pipelines);
+            }
             _ => {}
         }
     }

@@ -50,14 +50,15 @@ impl CommandHandler {
             let response = match command {
                 BotCommand::AudioDelay => self.audio_delay(split_message.next()).await,
                 BotCommand::Bitrate => self.bitrate(split_message.next()).await,
+                BotCommand::Latency => self.latency(split_message.next()).await,
                 BotCommand::Network => self.network(split_message.next()).await,
+                BotCommand::Pipeline => self.pipeline(split_message).await,
                 BotCommand::Poweroff => self.poweroff().await,
                 BotCommand::Restart => self.restart().await,
                 BotCommand::Sensor => self.sensor().await,
                 BotCommand::Start => self.start().await,
                 BotCommand::Stats => self.stats().await,
                 BotCommand::Stop => self.stop().await,
-                BotCommand::Latency => self.latency(split_message.next()).await,
             };
 
             match response {
@@ -487,6 +488,78 @@ impl CommandHandler {
         }
 
         Ok(format!("Changed audio delay to {} ms", delay))
+    }
+
+    pub(crate) async fn pipeline<'a, I>(&self, args: I) -> Result<String>
+    where
+        I: IntoIterator<Item = &'a str>,
+    {
+        let args = args.into_iter();
+        let query = args.collect::<Vec<&str>>().join(" ");
+
+        let (is_streaming, pipelines) = {
+            let state = self.bela_state.read().await;
+            let current_pipeline = state.config.as_ref().map(|config| &config.pipeline);
+            let mut pipelines = Vec::new();
+
+            if let (Some(all_pipelines), Some(current)) = (&state.pipelines, current_pipeline) {
+                // Should always contain a "/" and the current pipeline
+                let current = all_pipelines
+                    .get(current)
+                    .unwrap()
+                    .name
+                    .split('/')
+                    .next()
+                    .unwrap();
+
+                pipelines = all_pipelines
+                    .iter()
+                    .filter(|(_, v)| v.name.contains(current))
+                    .map(|(k, v)| (k.to_string(), v.name.split('/').nth(1).unwrap().to_owned()))
+                    .collect();
+            };
+
+            (state.is_streaming, pipelines)
+        };
+
+        if is_streaming {
+            let _ = self.stop().await?;
+            self.send("Restarting the stream".to_string()).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await
+        }
+
+        // find pipeline
+        let found_pipeline = pipelines
+            .iter()
+            .map(|(h, p)| {
+                let pl = p.to_lowercase().replace('_', " ");
+                ((h, p), strsim::sorensen_dice(&query, &pl))
+            })
+            //     .collect::<Vec<(f64, (String, String))>>();
+            .min_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+        let found_pipeline = match found_pipeline {
+            Some(p) => p,
+            None => return Ok("Pipeline not found".to_string()),
+        };
+
+        if found_pipeline.1 == 0.0 {
+            return Ok("Pipeline not found".to_string());
+        }
+
+        // change pipeline
+        {
+            let mut state = self.bela_state.write().await;
+            if let Some(mut config) = state.config.as_mut() {
+                config.pipeline = dbg!(found_pipeline.0 .0.to_owned());
+            }
+        }
+
+        if is_streaming {
+            let _ = self.start().await?;
+        }
+
+        Ok(format!("Changed pipeline to {}", found_pipeline.0 .1))
     }
 }
 
