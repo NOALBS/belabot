@@ -17,7 +17,8 @@ pub enum Message {
     StreamingStatus(StreamingStatus),
     Notification(Notification),
     Bitrate(Bitrate),
-    Pipelines(HashMap<String, String>),
+    Pipelines(HashMap<String, Pipeline>),
+    Acodecs(Acodecs),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -45,6 +46,8 @@ pub struct Config {
     pub srtla_port: String,
     pub bitrate_overlay: bool,
     pub ssh_pass: Option<String>,
+    pub asrc: String,
+    pub acodec: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -53,6 +56,13 @@ pub struct Netif {
     pub txb: u64,
     pub tp: u64,
     pub enabled: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Pipeline {
+    pub acodec: bool,
+    pub asrc: bool,
+    pub name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -155,4 +165,10 @@ pub struct NotificationMessage {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Bitrate {
     pub max_br: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Acodecs {
+    pub aac: String,
+    pub opus: String,
 }

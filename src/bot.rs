@@ -32,6 +32,7 @@ pub struct BelaState {
     pub netif: Option<HashMap<String, belabox::messages::Netif>>,
     pub sensors: Option<belabox::messages::Sensors>,
     pub notification_timeout: HashMap<String, time::Instant>,
+    pub pipelines: Option<HashMap<String, belabox::messages::Pipeline>>,
 }
 
 impl Bot {

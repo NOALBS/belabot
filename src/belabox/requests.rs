@@ -38,6 +38,8 @@ pub struct Start {
     pub srt_streamid: String,
     pub srt_latency: u64,
     pub bitrate_overlay: bool,
+    pub asrc: String,
+    pub acodec: String,
 }
 
 impl From<super::messages::Config> for Start {
@@ -51,6 +53,8 @@ impl From<super::messages::Config> for Start {
             srt_streamid: c.srt_streamid,
             srt_latency: c.srt_latency,
             bitrate_overlay: c.bitrate_overlay,
+            asrc: c.asrc,
+            acodec: c.acodec,
         }
     }
 }
