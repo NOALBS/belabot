@@ -22,7 +22,8 @@ Example of the config that will be automatically generated upon running the bina
             "modems": true,
             "notifications": true,
             "ups": true,
-            "ups_plugged_in": 5.1
+            "ups_plugged_in": 5.1,
+            "notification_timeout": 30
         }
     },
     "twitch": {
@@ -81,7 +82,8 @@ Example of the config that will be automatically generated upon running the bina
         "modems": true,
         "notifications": true,
         "ups": true,
-        "ups_plugged_in": 5.1
+        "ups_plugged_in": 5.1,
+        "notification_timeout": 30
     }
 }
 ```
@@ -137,6 +139,8 @@ After running the executable successfully you can use the following commands in 
 | Stop       | !bbstop         | Stops the stream                                      |
 | Latency    | !bbl (latency)  | Changes the SRT latency in ms                         |
 | AudioDelay | !bbd (delay)    | Changes the audio delay in ms                         |
+| AudioSrc   | !bba (source)   | Changes the audio source                              |
+| Pipeline   | !bbp (pipeline) | Changes the pipeline                                  |
 
 ## Disclaimer
 
