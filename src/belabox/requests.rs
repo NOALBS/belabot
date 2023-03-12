@@ -34,7 +34,7 @@ pub struct Start {
     pub delay: i32,
     pub max_br: u32,
     pub srtla_addr: String,
-    pub srtla_port: String,
+    pub srtla_port: u16,
     pub srt_streamid: String,
     pub srt_latency: u64,
     pub bitrate_overlay: bool,

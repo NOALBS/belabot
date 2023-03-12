@@ -44,7 +44,7 @@ pub struct Config {
     pub srt_latency: u64,
     pub srt_streamid: String,
     pub srtla_addr: String,
-    pub srtla_port: String,
+    pub srtla_port: u16,
     pub bitrate_overlay: bool,
     pub ssh_pass: Option<String>,
     pub asrc: String,
