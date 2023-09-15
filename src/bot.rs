@@ -7,7 +7,10 @@ use tokio::{
 };
 
 use crate::{
-    belabox,
+    belabox::{
+        self,
+        messages::{Remote, StatusKind},
+    },
     config::{self, BotCommand},
     error::Error,
     twitch::HandleMessage,
@@ -95,7 +98,7 @@ async fn handle_belabox_messages(
                 let mut lock = bela_state.write().await;
                 lock.config = Some(config);
             }
-            Message::RemoteEncoder(remote) => {
+            Message::Remote(Remote::RemoteEncoder(remote)) => {
                 let mut lock = bela_state.write().await;
                 lock.online = remote.is_encoder_online
             }
@@ -113,14 +116,21 @@ async fn handle_belabox_messages(
                     config.max_br = bitrate.max_br;
                 }
             }
-            Message::StreamingStatus(status) => {
-                let mut lock = bela_state.write().await;
-                lock.is_streaming = status.is_streaming;
-            }
             Message::Status(status) => {
                 let mut lock = bela_state.write().await;
-                lock.is_streaming = status.is_streaming;
-                lock.asrcs = Some(status.asrcs);
+
+                match status {
+                    StatusKind::Status(s) => {
+                        lock.is_streaming = s.is_streaming;
+                        lock.asrcs = Some(s.asrcs);
+                    }
+                    StatusKind::Asrcs(a) => {
+                        lock.asrcs = Some(a.asrcs);
+                    }
+                    StatusKind::StreamingStatus(ss) => {
+                        lock.is_streaming = ss.is_streaming;
+                    }
+                };
 
                 if lock.restart {
                     lock.restart = false;
@@ -137,10 +147,6 @@ async fn handle_belabox_messages(
             Message::Pipelines(pipelines) => {
                 let mut lock = bela_state.write().await;
                 lock.pipelines = Some(pipelines);
-            }
-            Message::Asrcs(status) => {
-                let mut lock = bela_state.write().await;
-                lock.asrcs = Some(status.asrcs);
             }
             _ => {}
         }

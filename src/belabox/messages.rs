@@ -3,23 +3,27 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", untagged)]
+#[serde(rename_all = "camelCase")]
 pub enum Message {
     Config(Config),
-    RemoteAuth(RemoteAuth),
-    RemoteEncoder(RemoteEncoder),
+    Remote(Remote),
     Netif(HashMap<String, Netif>),
     Revisions(Revisions),
     Sensors(Sensors),
-    Status(Status),
+    Status(StatusKind),
     Updating(Updating),
     Wifi(WifiChange),
-    StreamingStatus(StreamingStatus),
-    Notification(Notification),
+    Notification(Notifications),
     Bitrate(Bitrate),
     Pipelines(HashMap<String, Pipeline>),
     Acodecs(HashMap<String, String>),
-    Asrcs(Asrcs),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", untagged)]
+pub enum Remote {
+    RemoteAuth(RemoteAuth),
+    RemoteEncoder(RemoteEncoder),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -69,6 +73,17 @@ pub struct Pipeline {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct StreamingStatus {
     pub is_streaming: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(untagged)]
+pub enum StatusKind {
+    #[serde(rename = "status")]
+    Status(Status),
+    #[serde(rename = "asrcs")]
+    Asrcs(Asrcs),
+    #[serde(rename = "is_streaming")]
+    StreamingStatus(StreamingStatus),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -149,8 +164,21 @@ pub struct Revisions {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct Notification {
+#[serde(rename_all = "camelCase")]
+#[serde(untagged)]
+pub enum Notifications {
+    Show(NotificationShow),
+    Remove(NotificationRemove),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct NotificationShow {
     pub show: Vec<NotificationMessage>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct NotificationRemove {
+    pub remove: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]

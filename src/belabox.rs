@@ -238,6 +238,11 @@ async fn handle_messages(
         }
 
         if let TMessage::Text(text) = &message {
+            if let Ok(m) = serde_json::from_str::<Message>(text) {
+                handle_message(m, &message_tx).await?;
+                continue;
+            }
+
             let text: serde_json::Value = match serde_json::from_str(text) {
                 Ok(o) => o,
                 Err(e) => {
@@ -252,31 +257,44 @@ async fn handle_messages(
                     error!(?text, "not an object");
                     continue;
                 }
-            };
+            }
+            .to_owned();
 
-            for (key, value) in text {
-                let m: Message = match serde_json::from_value(value.to_owned()) {
+            for obj in text {
+                let v: Vec<_> = vec![obj.to_owned()];
+                let x: serde_json::Value = v.into_iter().collect();
+
+                let m: Message = match serde_json::from_value(x) {
                     Ok(o) => o,
                     Err(e) => {
-                        error!(?e, ?key, ?value, "failed to deserialize");
+                        error!(?e, ?obj, "failed to deserialize");
                         continue;
                     }
                 };
 
-                if let Message::RemoteAuth(remote) = &m {
-                    if !remote.auth_key {
-                        error!("Failed to authenticate");
-                        return Err(BelaboxError::AuthFailed);
-                    }
-                }
-
-                trace!(?m, "Received message");
-                let _ = message_tx.send(m);
+                handle_message(m, &message_tx).await?;
             }
         }
     }
 
     warn!("Disconnected from BELABOX Cloud");
+
+    Ok(())
+}
+
+async fn handle_message(
+    m: Message,
+    message_tx: &Arc<broadcast::Sender<Message>>,
+) -> Result<(), BelaboxError> {
+    if let Message::Remote(messages::Remote::RemoteAuth(remote)) = &m {
+        if !remote.auth_key {
+            error!("Failed to authenticate");
+            return Err(BelaboxError::AuthFailed);
+        }
+    }
+
+    trace!(?m, "Received message");
+    let _ = message_tx.send(m);
 
     Ok(())
 }

@@ -36,7 +36,7 @@ impl Monitor {
                         self.ups(sensors, monitor.ups_plugged_in).await;
                     }
                 }
-                Message::Notification(notification) => {
+                Message::Notification(messages::Notifications::Show(notification)) => {
                     if monitor.notifications {
                         self.notifications(notification, monitor.notification_timeout)
                             .await;
@@ -131,7 +131,7 @@ impl Monitor {
 
     pub async fn notifications(
         &self,
-        notification: messages::Notification,
+        notification: messages::NotificationShow,
         notification_timeout: u64,
     ) {
         let mut lock = self.bela_state.write().await;
