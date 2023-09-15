@@ -93,7 +93,7 @@ mod tests {
             delay: 0,
             max_br: 500,
             srtla_addr: "us1.srt.belabox.net".to_string(),
-            srtla_port: "5000".to_string(),
+            srtla_port: 5000,
             srt_streamid: "streamid".to_string(),
             srt_latency: 4000,
             bitrate_overlay: false,
@@ -104,7 +104,7 @@ mod tests {
         let json = serde_json::to_string(&message).unwrap();
         println!("{}", json);
 
-        let expected = r#"{"start":{"pipeline":"7ca3d9dd20726a7c2dad06948e1eadc6f84c461c","delay":0,"max_br":500,"srtla_addr":"us1.srt.belabox.net","srtla_port":"5000","srt_streamid":"streamid","srt_latency":4000,"bitrate_overlay":false,"asrc":"No audio","acodec":"opus"}}"#;
+        let expected = r#"{"start":{"pipeline":"7ca3d9dd20726a7c2dad06948e1eadc6f84c461c","delay":0,"max_br":500,"srtla_addr":"us1.srt.belabox.net","srtla_port":5000,"srt_streamid":"streamid","srt_latency":4000,"bitrate_overlay":false,"asrc":"No audio","acodec":"opus"}}"#;
         assert_eq!(expected, json);
     }
 

@@ -213,13 +213,13 @@ mod tests {
         let parsed = deserialize(message);
         println!("{:#?}", parsed);
 
-        let expected = Message::Asrcs(Asrcs {
+        let expected = Message::Status(StatusKind::Asrcs(Asrcs {
             asrcs: vec![
                 "Cam Link 4k".to_string(),
                 "USB audio".to_string(),
                 "No audio".to_string(),
             ],
-        });
+        }));
 
         assert_eq!(parsed, expected);
     }
@@ -231,17 +231,62 @@ mod tests {
         let parsed = deserialize(message);
         println!("{:#?}", parsed);
 
-        let expected = Message::StreamingStatus(StreamingStatus { is_streaming: true });
+        let expected = Message::Status(StatusKind::StreamingStatus(StreamingStatus {
+            is_streaming: true,
+        }));
+
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn notification_show_empty() {
+        let message = r#"{"notification":{"show":[]}}"#;
+
+        let parsed = deserialize(message);
+        println!("{:#?}", parsed);
+
+        let expected =
+            Message::Notification(Notifications::Show(NotificationShow { show: Vec::new() }));
+
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn notification_show() {
+        let message = r#"{"notification":{"show":[{"name":"asrc_not_found","type":"warning","msg":"Selected audio input 'HDMI' is unavailable. Waiting for it before starting the stream...","is_dismissable":false,"is_persistent":true,"duration":2}]}}"#;
+
+        let parsed = deserialize(message);
+        println!("{:#?}", parsed);
+
+        let expected = Message::Notification(Notifications::Show(NotificationShow {
+            show: vec![NotificationMessage {
+                duration: 2,
+                is_dismissable: false,
+                is_persistent: true,
+                msg: "Selected audio input 'HDMI' is unavailable. Waiting for it before starting the stream...".to_string(),
+                name:"asrc_not_found".to_string(),
+                kind: "warning".to_string(),
+            }],
+        }));
+
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn notification_remove() {
+        let message = r#"{"notification":{"remove":["camlink_usb2"]}}"#;
+
+        let parsed = deserialize(message);
+        println!("{:#?}", parsed);
+
+        let expected = Message::Notification(Notifications::Remove(NotificationRemove {
+            remove: vec!["camlink_usb2".to_string()],
+        }));
 
         assert_eq!(parsed, expected);
     }
 
     fn deserialize(json: &str) -> Message {
-        let text: serde_json::Value = serde_json::from_str(json).unwrap();
-        let text = text.as_object().unwrap();
-        let value = text.values().next().unwrap();
-        let m: Message = serde_json::from_value(value.to_owned()).unwrap();
-
-        m
+        serde_json::from_str(json).unwrap()
     }
 }
