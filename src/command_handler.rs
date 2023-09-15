@@ -551,7 +551,7 @@ impl CommandHandler {
         // change pipeline
         {
             let mut state = self.bela_state.write().await;
-            if let Some(mut config) = state.config.as_mut() {
+            if let Some(config) = state.config.as_mut() {
                 config.pipeline = found_pipeline.0 .0.to_owned();
             }
         }
@@ -606,7 +606,7 @@ impl CommandHandler {
         // change audio src
         {
             let mut state = self.bela_state.write().await;
-            if let Some(mut config) = state.config.as_mut() {
+            if let Some(config) = state.config.as_mut() {
                 config.asrc = found_asrcs.0.to_owned();
             }
         }
