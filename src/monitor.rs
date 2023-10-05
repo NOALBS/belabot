@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use tokio::{
-    sync::{broadcast, RwLock},
+    sync::{broadcast, Mutex, RwLock},
     time::Instant,
 };
 use tracing::{error, warn};
@@ -9,13 +9,14 @@ use tracing::{error, warn};
 use crate::{
     belabox::{self, messages, Message},
     bot::BelaState,
-    config, Belabox, Twitch,
+    command_handler, config, Belabox, Twitch,
 };
 
 pub struct Monitor {
     pub belabox: Arc<Belabox>,
     pub bela_state: Arc<RwLock<BelaState>>,
     pub twitch: Arc<Twitch>,
+    pub command_handler: Arc<Mutex<Option<command_handler::CommandHandler>>>,
 }
 
 impl Monitor {
@@ -29,6 +30,10 @@ impl Monitor {
                 Message::Netif(netif) => {
                     if monitor.modems {
                         self.modems(netif).await;
+                    }
+
+                    if monitor.network {
+                        self.network(monitor.network_timeout).await;
                     }
                 }
                 Message::Sensors(sensors) => {
@@ -154,5 +159,24 @@ impl Monitor {
 
             self.send("BB: ".to_owned() + &notification.msg).await;
         }
+    }
+
+    pub async fn network(&self, network_timeout: u64) {
+        {
+            let mut lock = self.bela_state.write().await;
+            let timeout = &mut lock.network_timeout;
+
+            if timeout.elapsed() < Duration::from_secs(network_timeout) {
+                return;
+            } else {
+                *timeout = Instant::now();
+            }
+        }
+
+        let lock = self.command_handler.lock().await;
+        let Some(ch) = &*lock else { return };
+        let Ok(msg) = ch.stats().await else { return };
+
+        self.send(msg).await;
     }
 }

@@ -12,6 +12,7 @@ use crate::{
     twitch, Belabox, Twitch,
 };
 
+#[derive(Clone)]
 pub struct CommandHandler {
     pub twitch: Arc<Twitch>,
     pub belabox: Arc<Belabox>,
@@ -177,7 +178,11 @@ impl CommandHandler {
         // Sort interfaces because they like to move around
         interfaces.sort();
 
-        let mut msg = format!("{}, Total: {} kbps", interfaces.join(", "), total_bitrate);
+        let mut msg = interfaces.join(", ");
+
+        if interfaces.len() > 1 {
+            msg = format!("{msg}, Total: {total_bitrate} kbps");
+        }
 
         if let Some(connected) = ups {
             let a = if !connected { "not" } else { "" };

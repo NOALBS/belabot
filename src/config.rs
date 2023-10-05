@@ -36,8 +36,10 @@ pub struct Monitor {
     pub modems: bool,
     pub notifications: bool,
     pub ups: bool,
+    pub network: bool,
     pub ups_plugged_in: f64,
     pub notification_timeout: u64,
+    pub network_timeout: u64,
 }
 
 impl Default for Monitor {
@@ -46,8 +48,10 @@ impl Default for Monitor {
             modems: true,
             notifications: true,
             ups: false,
+            network: false,
             ups_plugged_in: 5.1,
             notification_timeout: 30,
+            network_timeout: 30,
         }
     }
 }

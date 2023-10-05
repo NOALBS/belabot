@@ -1,9 +1,9 @@
 use std::{collections::HashMap, sync::Arc};
 
 use tokio::{
-    sync::{broadcast::Receiver, RwLock},
+    sync::{broadcast::Receiver, Mutex, RwLock},
     task::JoinHandle,
-    time,
+    time::{self, Instant},
 };
 
 use crate::{
@@ -25,7 +25,7 @@ pub struct Bot {
     pub belabox: Arc<Belabox>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct BelaState {
     pub online: bool,
     pub is_streaming: bool,
@@ -35,8 +35,27 @@ pub struct BelaState {
     pub netif: Option<HashMap<String, belabox::messages::Netif>>,
     pub sensors: Option<belabox::messages::Sensors>,
     pub notification_timeout: HashMap<String, time::Instant>,
+    pub network_timeout: time::Instant,
     pub pipelines: Option<HashMap<String, belabox::messages::Pipeline>>,
     pub asrcs: Option<Vec<String>>,
+}
+
+impl Default for BelaState {
+    fn default() -> Self {
+        Self {
+            network_timeout: Instant::now(),
+            online: Default::default(),
+            is_streaming: Default::default(),
+            restart: Default::default(),
+            notify_ups: Default::default(),
+            config: Default::default(),
+            netif: Default::default(),
+            sensors: Default::default(),
+            notification_timeout: Default::default(),
+            pipelines: Default::default(),
+            asrcs: Default::default(),
+        }
+    }
 }
 
 impl Bot {
@@ -46,6 +65,9 @@ impl Bot {
 
         // Create state to store BELABOX information
         let bela_state = Arc::new(RwLock::new(BelaState::default()));
+
+        // Access to the command handler
+        let command_handler = Arc::new(Mutex::new(None));
 
         // Read BELABOX messages
         let bb_msg_handle = tokio::spawn(handle_belabox_messages(
@@ -61,6 +83,7 @@ impl Bot {
             twitch.clone(),
             config.belabox.monitor,
             bela_state.clone(),
+            command_handler.clone(),
         ));
 
         // Read Twitch messages
@@ -72,6 +95,7 @@ impl Bot {
             config.belabox.custom_interface_name,
             config.twitch.admins,
             bela_state,
+            command_handler,
         ));
 
         Ok(Self {
@@ -159,15 +183,18 @@ async fn handle_belabox_monitor(
     twitch: Arc<Twitch>,
     monitor: config::Monitor,
     bela_state: Arc<RwLock<BelaState>>,
+    command_handler: Arc<Mutex<Option<CommandHandler>>>,
 ) {
     let handler = Monitor {
         belabox,
         bela_state,
         twitch,
+        command_handler,
     };
     handler.run(bb_msg, monitor).await;
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_twitch_messages(
     tw_msg: Receiver<HandleMessage>,
     belabox: Arc<Belabox>,
@@ -176,6 +203,7 @@ async fn handle_twitch_messages(
     custom_interface_name: HashMap<String, String>,
     admins: Vec<String>,
     bela_state: Arc<RwLock<BelaState>>,
+    command_handler: Arc<Mutex<Option<CommandHandler>>>,
 ) {
     let handler = CommandHandler {
         twitch,
@@ -185,5 +213,6 @@ async fn handle_twitch_messages(
         custom_interface_name,
         admins,
     };
+    *command_handler.lock().await = Some(handler.clone());
     handler.run(tw_msg).await;
 }
