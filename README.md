@@ -22,8 +22,10 @@ Example of the config that will be automatically generated upon running the bina
             "modems": true,
             "notifications": true,
             "ups": true,
+            "network": false,
             "ups_plugged_in": 5.1,
-            "notification_timeout": 30
+            "notification_timeout": 30,
+            "network_timeout": 30
         }
     },
     "twitch": {
