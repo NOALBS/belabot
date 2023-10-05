@@ -164,8 +164,11 @@ impl Monitor {
     pub async fn network(&self, network_timeout: u64) {
         {
             let mut lock = self.bela_state.write().await;
-            let timeout = &mut lock.network_timeout;
+            if !lock.is_streaming {
+                return;
+            }
 
+            let timeout = &mut lock.network_timeout;
             if timeout.elapsed() < Duration::from_secs(network_timeout) {
                 return;
             } else {
