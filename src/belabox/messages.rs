@@ -17,6 +17,7 @@ pub enum Message {
     Bitrate(Bitrate),
     Pipelines(HashMap<String, Pipeline>),
     Acodecs(HashMap<String, String>),
+    Relays(Relays),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -24,6 +25,7 @@ pub enum Message {
 pub enum Remote {
     RemoteAuth(RemoteAuth),
     RemoteEncoder(RemoteEncoder),
+    RemoteRevision(RemoteRevision),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -39,20 +41,23 @@ pub struct RemoteEncoder {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct RemoteRevision {
+    pub revision: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Config {
-    pub password_hash: String,
     pub remote_key: String,
     pub max_br: u32,
     pub delay: i32,
     pub pipeline: String,
     pub srt_latency: u64,
-    pub srt_streamid: String,
-    pub srtla_addr: String,
-    pub srtla_port: u16,
     pub bitrate_overlay: bool,
     pub ssh_pass: Option<String>,
     pub asrc: String,
     pub acodec: String,
+    pub relay_server: String,
+    pub relay_account: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -200,6 +205,22 @@ pub struct Bitrate {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Asrcs {
     pub asrcs: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct Relays {
+    pub servers: HashMap<String, Server>,
+    pub accounts: HashMap<String, Account>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct Server {
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct Account {
+    pub name: String,
 }
 
 #[cfg(test)]

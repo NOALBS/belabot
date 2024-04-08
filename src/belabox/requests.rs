@@ -33,13 +33,13 @@ pub struct Start {
     pub pipeline: String,
     pub delay: i32,
     pub max_br: u32,
-    pub srtla_addr: String,
-    pub srtla_port: u16,
-    pub srt_streamid: String,
     pub srt_latency: u64,
     pub bitrate_overlay: bool,
     pub asrc: String,
     pub acodec: String,
+    pub remote_key: String,
+    pub relay_server: String,
+    pub relay_account: String,
 }
 
 impl From<super::messages::Config> for Start {
@@ -48,13 +48,13 @@ impl From<super::messages::Config> for Start {
             pipeline: c.pipeline,
             delay: c.delay,
             max_br: c.max_br,
-            srtla_addr: c.srtla_addr,
-            srtla_port: c.srtla_port,
-            srt_streamid: c.srt_streamid,
             srt_latency: c.srt_latency,
             bitrate_overlay: c.bitrate_overlay,
             asrc: c.asrc,
             acodec: c.acodec,
+            remote_key: c.remote_key,
+            relay_server: c.relay_server,
+            relay_account: c.relay_account,
         }
     }
 }
@@ -92,19 +92,19 @@ mod tests {
             pipeline: "7ca3d9dd20726a7c2dad06948e1eadc6f84c461c".to_string(),
             delay: 0,
             max_br: 500,
-            srtla_addr: "us1.srt.belabox.net".to_string(),
-            srtla_port: 5000,
-            srt_streamid: "streamid".to_string(),
             srt_latency: 4000,
             bitrate_overlay: false,
             asrc: "No audio".to_string(),
             acodec: "opus".to_string(),
+            remote_key: "remote_key".to_string(),
+            relay_server: "1".to_string(),
+            relay_account: "1".to_string(),
         });
 
         let json = serde_json::to_string(&message).unwrap();
         println!("{}", json);
 
-        let expected = r#"{"start":{"pipeline":"7ca3d9dd20726a7c2dad06948e1eadc6f84c461c","delay":0,"max_br":500,"srtla_addr":"us1.srt.belabox.net","srtla_port":5000,"srt_streamid":"streamid","srt_latency":4000,"bitrate_overlay":false,"asrc":"No audio","acodec":"opus"}}"#;
+        let expected = r#"{"start":{"pipeline":"7ca3d9dd20726a7c2dad06948e1eadc6f84c461c","delay":0,"max_br":500,"srt_latency":4000,"bitrate_overlay":false,"asrc":"No audio","acodec":"opus","remote_key":"remote_key","relay_server":"1","relay_account":"1"}}"#;
         assert_eq!(expected, json);
     }
 
