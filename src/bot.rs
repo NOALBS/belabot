@@ -84,6 +84,7 @@ impl Bot {
             config.belabox.monitor,
             bela_state.clone(),
             command_handler.clone(),
+            config.belabox.custom_interface_name.clone(),
         ));
 
         // Read Twitch messages
@@ -184,12 +185,14 @@ async fn handle_belabox_monitor(
     monitor: config::Monitor,
     bela_state: Arc<RwLock<BelaState>>,
     command_handler: Arc<Mutex<Option<CommandHandler>>>,
+    custom_interface_name: HashMap<String, String>,
 ) {
     let handler = Monitor {
         belabox,
         bela_state,
         twitch,
         command_handler,
+        custom_interface_name,
     };
     handler.run(bb_msg, monitor).await;
 }

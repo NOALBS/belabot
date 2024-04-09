@@ -17,6 +17,7 @@ pub struct Monitor {
     pub bela_state: Arc<RwLock<BelaState>>,
     pub twitch: Arc<Twitch>,
     pub command_handler: Arc<Mutex<Option<command_handler::CommandHandler>>>,
+    pub custom_interface_name: HashMap<String, String>,
 }
 
 impl Monitor {
@@ -65,16 +66,29 @@ impl Monitor {
             None => return,
         };
 
+        let netif_name = |n: &String| -> String {
+            if let Some(custom) = self.custom_interface_name.get(n) {
+                return custom.to_owned();
+            }
+
+            let i = netif.get(n).unwrap();
+            if let Some(custom) = self.custom_interface_name.get(&i.ip) {
+                return custom.to_owned();
+            }
+
+            n.to_owned()
+        };
+
         let added = netif
             .keys()
             .filter(|&n| !previous.contains_key(n))
-            .map(|n| n.to_owned())
+            .map(netif_name)
             .collect::<Vec<String>>();
 
         let removed = previous
             .keys()
             .filter(|&n| !netif.contains_key(n))
-            .map(|n| n.to_owned())
+            .map(netif_name)
             .collect::<Vec<String>>();
 
         let mut message = Vec::new();
