@@ -89,6 +89,8 @@ pub enum StatusKind {
     Asrcs(Asrcs),
     #[serde(rename = "is_streaming")]
     StreamingStatus(StreamingStatus),
+    #[serde(rename = "wifi")]
+    Wifi(WifiChange),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
