@@ -63,7 +63,8 @@ pub struct Config {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Netif {
     pub ip: String,
-    pub txb: u64,
+    /// Might have been removed in newer versions
+    pub txb: Option<u64>,
     pub tp: u64,
     pub enabled: bool,
 }
