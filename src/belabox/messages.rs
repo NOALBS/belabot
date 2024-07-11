@@ -67,6 +67,7 @@ pub struct Netif {
     pub txb: Option<u64>,
     pub tp: u64,
     pub enabled: bool,
+    pub error: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
