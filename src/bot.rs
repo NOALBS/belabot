@@ -156,6 +156,7 @@ async fn handle_belabox_messages(
                         lock.is_streaming = ss.is_streaming;
                     }
                     StatusKind::Wifi(_) => {}
+                    StatusKind::AvailableUpdates(_) => {}
                 };
 
                 if lock.restart {

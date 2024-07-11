@@ -92,6 +92,8 @@ pub enum StatusKind {
     StreamingStatus(StreamingStatus),
     #[serde(rename = "wifi")]
     Wifi(WifiChange),
+    #[serde(rename = "available_updates")]
+    AvailableUpdates(AvailableUpdatesStatus),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -123,8 +125,14 @@ pub struct WifiChange {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct AvailableUpdatesStatus {
+    pub available_updates: Option<AvailableUpdates>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct AvailableUpdates {
     pub package_count: u32,
+    pub download_size: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
