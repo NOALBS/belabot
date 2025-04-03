@@ -1,3 +1,5 @@
 /target
+**/*.rs.bk
+rustup-init.exe
 
 config.json
