@@ -157,6 +157,7 @@ async fn handle_belabox_messages(
                     }
                     StatusKind::Wifi(_) => {}
                     StatusKind::AvailableUpdates(_) => {}
+                    StatusKind::ModemStatus(_) => {}
                 };
 
                 if lock.restart {
