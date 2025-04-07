@@ -54,10 +54,10 @@ pub struct Config {
     pub srt_latency: u64,
     pub bitrate_overlay: bool,
     pub ssh_pass: Option<String>,
-    pub asrc: String,
-    pub acodec: String,
-    pub relay_server: String,
-    pub relay_account: String,
+    pub asrc: Option<String>,
+    pub acodec: Option<String>,
+    pub relay_server: Option<String>,
+    pub relay_account: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -130,6 +130,7 @@ pub struct WifiChange {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct AvailableUpdatesStatus {
     pub available_updates: Option<AvailableUpdates>,
+    pub package_count: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]

@@ -612,7 +612,7 @@ impl CommandHandler {
         {
             let mut state = self.bela_state.write().await;
             if let Some(config) = state.config.as_mut() {
-                config.asrc = found_asrcs.0.to_owned();
+                config.asrc = Some(found_asrcs.0.to_owned());
             }
         }
 

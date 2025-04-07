@@ -29,17 +29,18 @@ pub enum Remote {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde_with::skip_serializing_none]
 pub struct Start {
     pub pipeline: String,
     pub delay: i32,
     pub max_br: u32,
     pub srt_latency: u64,
     pub bitrate_overlay: bool,
-    pub asrc: String,
-    pub acodec: String,
+    pub asrc: Option<String>,
+    pub acodec: Option<String>,
     pub remote_key: String,
-    pub relay_server: String,
-    pub relay_account: String,
+    pub relay_server: Option<String>,
+    pub relay_account: Option<String>,
 }
 
 impl From<super::messages::Config> for Start {
