@@ -99,7 +99,7 @@ pub enum StatusKind {
     #[serde(rename = "available_updates")]
     AvailableUpdates(AvailableUpdatesStatus),
     #[serde(rename = "modems")]
-    ModemStatus(ModemStatus),
+    ModemsStatus(ModemsStatus),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -164,6 +164,47 @@ pub struct Available {
     pub signal: i64,
     pub security: String,
     pub freq: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct ModemsStatus {
+    pub modems: HashMap<String, Modem>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct Modem {
+    pub ifname: Option<String>,
+    pub name: Option<String>,
+    pub network_type: Option<NetworkType>,
+    pub config: Option<ModemConfig>,
+    pub no_sim: Option<bool>,
+    pub available_networks: Option<Vec<String>>,
+    pub status: Option<ModemStatus>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct NetworkType {
+    pub supported: Vec<String>,
+    pub active: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct ModemConfig {
+    pub autoconfig: Option<bool>,
+    pub apn: String,
+    pub username: String,
+    pub password: String,
+    pub roaming: bool,
+    pub network: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct ModemStatus {
+    pub connection: String,
+    pub network: String,
+    pub network_type: String,
+    pub signal: String,
+    pub roaming: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -239,11 +280,6 @@ pub struct Server {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Account {
     pub name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct ModemStatus {
-    pub modems: HashMap<String, serde_json::Value>,
 }
 
 #[cfg(test)]
