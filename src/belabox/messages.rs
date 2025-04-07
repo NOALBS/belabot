@@ -58,6 +58,9 @@ pub struct Config {
     pub acodec: Option<String>,
     pub relay_server: Option<String>,
     pub relay_account: Option<String>,
+    pub srt_streamid: Option<String>,
+    pub srtla_addr: Option<String>,
+    pub srtla_port: Option<u16>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]

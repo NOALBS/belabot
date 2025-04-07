@@ -35,6 +35,9 @@ pub struct Start {
     pub delay: i32,
     pub max_br: u32,
     pub srt_latency: u64,
+    pub srt_streamid: Option<String>,
+    pub srtla_addr: Option<String>,
+    pub srtla_port: Option<u16>,
     pub bitrate_overlay: bool,
     pub asrc: Option<String>,
     pub acodec: Option<String>,
@@ -56,6 +59,9 @@ impl From<super::messages::Config> for Start {
             remote_key: c.remote_key,
             relay_server: c.relay_server,
             relay_account: c.relay_account,
+            srt_streamid: c.srt_streamid,
+            srtla_addr: c.srtla_addr,
+            srtla_port: c.srtla_port,
         }
     }
 }
