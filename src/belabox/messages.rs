@@ -95,6 +95,8 @@ pub enum StatusKind {
     Wifi(WifiChange),
     #[serde(rename = "available_updates")]
     AvailableUpdates(AvailableUpdatesStatus),
+    #[serde(rename = "modems")]
+    ModemStatus(ModemStatus),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -233,6 +235,11 @@ pub struct Server {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Account {
     pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct ModemStatus {
+    pub modems: HashMap<String, serde_json::Value>,
 }
 
 #[cfg(test)]
