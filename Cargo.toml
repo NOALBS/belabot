@@ -1,6 +1,6 @@
 [package]
 name = "belabot"
-version = "0.3.6"
+version = "0.4.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,11 +13,11 @@ serde_json = "1.0"
 serde_with = "3.12.0"
 strsim = "0.11.1"
 tokio = { version = "1.20.1", features = ["full"] }
-tokio-tungstenite = { version = "0.21", features = [ "native-tls" ] }
+tokio-tungstenite = { version = "0.26", features = [ "native-tls" ] }
 twitch-irc = "5.0"
 
 anyhow = "1.0"
-thiserror = "1.0.31"
+thiserror = "2.0.12"
 
 tracing = "0.1"
 tracing-futures = "0.2"

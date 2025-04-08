@@ -148,7 +148,7 @@ async fn run_loop(
 
         // Authenticate
         let auth_request = serde_json::to_string(&Request::Remote(auth.clone())).unwrap();
-        if let Err(e) = write.send(TMessage::Text(auth_request)).await {
+        if let Err(e) = write.send(TMessage::Text(auth_request.into())).await {
             error!(?e, "error sending auth message");
             continue;
         };
@@ -211,7 +211,7 @@ async fn keepalive(write: Arc<Mutex<Option<Writer>>>, mut cancel_rx: oneshot::Re
         if let Some(w) = write.lock().await.as_mut() {
             if (w
                 .send(TMessage::Text(
-                    serde_json::to_string(&Request::Keepalive(None)).unwrap(),
+                    serde_json::to_string(&Request::Keepalive(None)).unwrap().into(),
                 ))
                 .await)
                 .is_err()
@@ -246,7 +246,7 @@ async fn handle_messages(
             let text: serde_json::Value = match serde_json::from_str(text) {
                 Ok(o) => o,
                 Err(e) => {
-                    error!(?e, text, "failed to deserialize");
+                    error!(?e, ?text, "failed to deserialize");
                     continue;
                 }
             };
@@ -310,7 +310,7 @@ async fn handle_requests(
         let mut lock = write.lock().await;
         if let Some(w) = lock.as_mut() {
             let res = w
-                .send(TMessage::Text(request.message))
+                .send(TMessage::Text(request.message.into()))
                 .await
                 .map_err(BelaboxError::Send);
 
