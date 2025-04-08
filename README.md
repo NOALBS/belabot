@@ -137,6 +137,7 @@ After running the executable successfully you can use the following commands in 
 | Restart    | !bbrestart      | Restarts the jetson nano                              |
 | Sensor     | !bbsensor       | Shows the current sensor information                  |
 | Stats      | !bbs            | Shows the current connected modems status and bitrate |
+| Modems     | !bbm            | Shows the current connected modems status and bitrate |
 | Start      | !bbstart        | Starts the stream                                     |
 | Stop       | !bbstop         | Stops the stream                                      |
 | Latency    | !bbl (latency)  | Changes the SRT latency in ms                         |
