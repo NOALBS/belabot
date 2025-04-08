@@ -85,8 +85,8 @@ pub struct StreamingStatus {
     pub is_streaming: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[serde(untagged)]
+#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+//#[serde(untagged)]
 pub enum StatusKind {
     #[serde(rename = "status")]
     Status(Status),
@@ -99,7 +99,60 @@ pub enum StatusKind {
     #[serde(rename = "available_updates")]
     AvailableUpdates(AvailableUpdatesStatus),
     #[serde(rename = "modems")]
-    ModemsStatus(ModemsStatus),
+    Modems(Modems),
+    #[serde(rename = "updating")]
+    Updating(Updating),
+}
+
+impl<'de> serde::Deserialize<'de> for StatusKind {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Deserialize into a generic JSON Value first.
+        let val = serde_json::Value::deserialize(deserializer)?;
+        let obj = val.as_object().ok_or_else(|| {
+            serde::de::Error::custom("Expected a JSON object when deserializing StatusKind")
+        })?;
+
+        // If more than one key is present, choose the default detailed Status immediately.
+        if obj.len() > 1 {
+            return Status::deserialize(val)
+                .map(StatusKind::Status)
+                .map_err(serde::de::Error::custom);
+        }
+
+        // If there's exactly one key, use that key to decide the variant.
+        if let Some((key, _)) = obj.iter().next() {
+            return match key.as_str() {
+                "asrcs" => Asrcs::deserialize(val)
+                    .map(StatusKind::Asrcs)
+                    .map_err(serde::de::Error::custom),
+                "is_streaming" => StreamingStatus::deserialize(val)
+                    .map(StatusKind::StreamingStatus)
+                    .map_err(serde::de::Error::custom),
+                "wifi" => WifiChange::deserialize(val)
+                    .map(StatusKind::Wifi)
+                    .map_err(serde::de::Error::custom),
+                "available_updates" => AvailableUpdatesStatus::deserialize(val)
+                    .map(StatusKind::AvailableUpdates)
+                    .map_err(serde::de::Error::custom),
+                "modems" => Modems::deserialize(val)
+                    .map(StatusKind::Modems)
+                    .map_err(serde::de::Error::custom),
+                "updating" => Updating::deserialize(val)
+                    .map(StatusKind::Updating)
+                    .map_err(serde::de::Error::custom),
+                _ => Status::deserialize(val)
+                    .map(StatusKind::Status)
+                    .map_err(serde::de::Error::custom),
+            };
+        }
+
+        Err(serde::de::Error::custom(
+            "Expected a single key in the JSON object when deserializing StatusKind",
+        ))
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -110,6 +163,7 @@ pub struct Status {
     pub ssh: Ssh,
     pub wifi: HashMap<String, Wifi>,
     pub asrcs: Vec<String>,
+    pub modems: HashMap<String, Modem>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -133,13 +187,12 @@ pub struct WifiChange {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct AvailableUpdatesStatus {
     pub available_updates: Option<AvailableUpdates>,
-    pub package_count: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct AvailableUpdates {
-    pub package_count: u32,
-    pub download_size: String,
+    pub package_count: Option<u32>,
+    pub download_size: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -167,7 +220,7 @@ pub struct Available {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct ModemsStatus {
+pub struct Modems {
     pub modems: HashMap<String, Modem>,
 }
 
@@ -177,8 +230,10 @@ pub struct Modem {
     pub name: Option<String>,
     pub network_type: Option<NetworkType>,
     pub config: Option<ModemConfig>,
+    /// Will be set to true when there is no config
     pub no_sim: Option<bool>,
-    pub available_networks: Option<Vec<String>>,
+    // TODO: What does this object look like?
+    pub available_networks: Option<serde_json::Value>,
     pub status: Option<ModemStatus>,
 }
 

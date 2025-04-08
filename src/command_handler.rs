@@ -53,6 +53,7 @@ impl CommandHandler {
                 BotCommand::AudioSrc => self.audio_src(split_message).await,
                 BotCommand::Bitrate => self.bitrate(split_message.next()).await,
                 BotCommand::Latency => self.latency(split_message.next()).await,
+                BotCommand::Modems => self.modems().await,
                 BotCommand::Network => self.network(split_message.next()).await,
                 BotCommand::Pipeline => self.pipeline(split_message).await,
                 BotCommand::Poweroff => self.poweroff().await,
@@ -190,6 +191,52 @@ impl CommandHandler {
         }
 
         Ok(msg)
+    }
+
+    pub async fn modems(&self) -> Result<String> {
+        let (netifs, modems) = {
+            let state = self.bela_state.read().await;
+            (state.netif.clone(), state.modems.clone())
+        };
+
+        let modem_infos: Vec<String> = modems
+            .values()
+            .map(|modem| {
+                // Determine the interface name using a custom name if available
+                // FIXME: The name could be set once in bot.rs
+                let name_label = if let Some(ifname) = &modem.ifname {
+                    let custom_name = netifs
+                        .as_ref()
+                        .and_then(|netifs| netifs.get(ifname))
+                        .and_then(|iface| {
+                            self.custom_interface_name
+                                .get(ifname)
+                                .or_else(|| self.custom_interface_name.get(&iface.ip))
+                        })
+                        .cloned()
+                        .unwrap_or_else(|| ifname.to_owned());
+                    format!("{}", custom_name)
+                } else {
+                    "Modem".to_owned()
+                };
+
+                // Build status string if available
+                let status_info = modem.status.as_ref().map_or(String::new(), |status| {
+                    let mut info = format!(
+                        "{} on {}, {}, signal {}",
+                        status.network_type, status.network, status.connection, status.signal
+                    );
+                    if status.roaming {
+                        info.push_str(", roaming");
+                    }
+                    info
+                });
+
+                format!("{}: {}", name_label, status_info).trim().to_owned()
+            })
+            .collect();
+
+        Ok(modem_infos.join(" - "))
     }
 
     pub async fn restart(&self) -> Result<String> {

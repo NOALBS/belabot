@@ -76,6 +76,7 @@ pub enum BotCommand {
     AudioSrc,
     Bitrate,
     Latency,
+    Modems,
     Network,
     Pipeline,
     Poweroff,
@@ -283,6 +284,13 @@ fn default_chat_commands(commands: &mut HashMap<BotCommand, CommandInformation>)
         .or_insert(CommandInformation {
             command: "!bbs".to_string(),
             permission: Permission::Public,
+        });
+
+    commands
+        .entry(BotCommand::Modems)
+        .or_insert(CommandInformation {
+            command: "!bbm".to_string(),
+            permission: Permission::Broadcaster,
         });
 
     commands

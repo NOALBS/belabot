@@ -33,6 +33,7 @@ pub struct BelaState {
     pub notify_ups: Option<bool>,
     pub config: Option<belabox::messages::Config>,
     pub netif: Option<HashMap<String, belabox::messages::Netif>>,
+    pub modems: HashMap<String, belabox::messages::Modem>,
     pub sensors: Option<belabox::messages::Sensors>,
     pub notification_timeout: HashMap<String, time::Instant>,
     pub network_timeout: time::Instant,
@@ -50,6 +51,7 @@ impl Default for BelaState {
             notify_ups: Default::default(),
             config: Default::default(),
             netif: Default::default(),
+            modems: Default::default(),
             sensors: Default::default(),
             notification_timeout: Default::default(),
             pipelines: Default::default(),
@@ -143,11 +145,11 @@ async fn handle_belabox_messages(
             }
             Message::Status(status) => {
                 let mut lock = bela_state.write().await;
-
                 match status {
                     StatusKind::Status(s) => {
                         lock.is_streaming = s.is_streaming;
                         lock.asrcs = Some(s.asrcs);
+                        lock.modems = s.modems;
                     }
                     StatusKind::Asrcs(a) => {
                         lock.asrcs = Some(a.asrcs);
@@ -157,7 +159,22 @@ async fn handle_belabox_messages(
                     }
                     StatusKind::Wifi(_) => {}
                     StatusKind::AvailableUpdates(_) => {}
-                    StatusKind::ModemsStatus(_) => {}
+                    StatusKind::Modems(incoming) => {
+                        let current_modems = &mut lock.modems;
+
+                        for (key, modem) in incoming.modems.iter() {
+                            current_modems
+                                .entry(key.to_string())
+                                .and_modify(|existing| {
+                                    existing.status = modem.status.clone();
+                                })
+                                .or_insert_with(|| modem.clone());
+                        }
+
+                        // Remove modems that are not present in the incoming update.
+                        current_modems.retain(|key, _| incoming.modems.contains_key(key));
+                    }
+                    StatusKind::Updating(_) => {}
                 };
 
                 if lock.restart {
