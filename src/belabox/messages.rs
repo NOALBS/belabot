@@ -86,7 +86,6 @@ pub struct StreamingStatus {
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq)]
-//#[serde(untagged)]
 pub enum StatusKind {
     #[serde(rename = "status")]
     Status(Status),
