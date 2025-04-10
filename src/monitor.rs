@@ -70,9 +70,10 @@ impl Monitor {
             if let Some(custom) = self.custom_interface_name.get(n) {
                 return custom.to_owned();
             }
-
-            let i = netif.get(n).unwrap();
-            if let Some(custom) = self.custom_interface_name.get(&i.ip) {
+            if let Some(custom) = netif
+                .get(n)
+                .and_then(|iface| self.custom_interface_name.get(&iface.ip))
+            {
                 return custom.to_owned();
             }
 
