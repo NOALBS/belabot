@@ -205,8 +205,8 @@ pub struct Ssh {
 pub struct Wifi {
     pub ifname: String,
     pub conn: Option<String>,
-    pub available: Vec<Available>,
-    pub saved: HashMap<String, String>,
+    pub available: Option<Vec<Available>>,
+    pub saved: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -255,8 +255,8 @@ pub struct ModemConfig {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct ModemStatus {
     pub connection: String,
-    pub network: String,
-    pub network_type: String,
+    pub network: Option<String>,
+    pub network_type: Option<String>,
     pub signal: String,
     pub roaming: bool,
 }

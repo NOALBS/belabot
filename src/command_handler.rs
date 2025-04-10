@@ -205,7 +205,7 @@ impl CommandHandler {
                 // Determine the interface name using a custom name if available
                 // FIXME: The name could be set once in bot.rs
                 let name_label = if let Some(ifname) = &modem.ifname {
-                    let custom_name = netifs
+                    netifs
                         .as_ref()
                         .and_then(|netifs| netifs.get(ifname))
                         .and_then(|iface| {
@@ -214,17 +214,19 @@ impl CommandHandler {
                                 .or_else(|| self.custom_interface_name.get(&iface.ip))
                         })
                         .cloned()
-                        .unwrap_or_else(|| ifname.to_owned());
-                    format!("{}", custom_name)
+                        .unwrap_or_else(|| ifname.to_owned())
                 } else {
-                    "Modem".to_owned()
+                    "Modem".to_string()
                 };
 
                 // Build status string if available
                 let status_info = modem.status.as_ref().map_or(String::new(), |status| {
+                    let network_type = status.network_type.as_deref().unwrap_or("?G");
+                    let network = status.network.as_deref().unwrap_or("Unknown Network");
+
                     let mut info = format!(
                         "{} on {}, {}, signal {}",
-                        status.network_type, status.network, status.connection, status.signal
+                        network_type, network, status.connection, status.signal
                     );
                     if status.roaming {
                         info.push_str(", roaming");
