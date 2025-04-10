@@ -211,7 +211,9 @@ async fn keepalive(write: Arc<Mutex<Option<Writer>>>, mut cancel_rx: oneshot::Re
         if let Some(w) = write.lock().await.as_mut() {
             if (w
                 .send(TMessage::Text(
-                    serde_json::to_string(&Request::Keepalive(None)).unwrap().into(),
+                    serde_json::to_string(&Request::Keepalive(None))
+                        .unwrap()
+                        .into(),
                 ))
                 .await)
                 .is_err()
